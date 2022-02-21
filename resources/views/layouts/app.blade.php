@@ -33,7 +33,19 @@
                 <div class="collapse navbar-collapse" id="navbarSupportedContent">
                     <!-- Left Side Of Navbar -->
                     <ul class="navbar-nav mr-auto">
-
+                        <ul class="navbar-nav me-auto">
+                            @if (Auth::check())
+                            <li class="nav-item">
+                                <a class="nav-link" href="{{ route('tasks') }}">{{ __('Todolist') }}</a>
+                            </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('categories.index') }}">{{ __('Categories') }}</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="{{ route('users.index') }}">{{ __('Users') }}</a>
+                                </li>
+                            @endif
+                        </ul>
                     </ul>
 
                     <!-- Right Side Of Navbar -->
@@ -42,7 +54,7 @@
                         @guest
                             @if (Route::has('login'))
                                 <li class="nav-item">
-                                    <a class="nav-link" href="{{ route('login') }}">{{ __('Login') }}</a>
+                                    <a class="nav-link title" href="{{ route('login') }}">{{ __('Login') }}</a>
                                 </li>
                             @endif
 
@@ -75,9 +87,28 @@
             </div>
         </nav>
 
-        <main class="py-4">
+        <main>
             @yield('content')
         </main>
     </div>
 </body>
 </html>
+
+<style>
+    body,h1 {font-family: "Raleway", sans-serif}
+    body, html {height: 100%}
+    .bgimg {
+      background-image: url({{asset("/images/background.jpg")}});
+      min-height: 100%;
+      background-position: center;
+      background-size: cover;
+    }
+    .title {
+        color: aliceblue;
+    }
+
+    .transparent {
+        opacity: 1;
+    }
+
+    </style>

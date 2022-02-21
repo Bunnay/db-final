@@ -2,46 +2,37 @@
 
 namespace App\Http\Controllers;
 use App\Models\Task;
-use App\Models\User;
+use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 use DB;
 
 class TasksController extends Controller
 {
     public function index(Request $request)
     {
-        $statuses = DB::table('tasks')
-                        ->select('status')
-                        ->distinct()
-                        ->get()
-                        ->pluck('status');
 
-        $user_names = DB::table('tasks')
-                        ->join('users', 'tasks.user_id', '=', 'users.id')
-                        ->select('user_id', 'users.name')
-                        ->distinct()
-                        ->get();
+        $tasks = Task::with(['user', 'categories'])
+            ->when($request->query('status'), function ($query) use ($request) {
+                return $query->where('status', $request->query('status'));
+            })
+            ->when($request->query('user_id'), function ($query) use ($request) {
+                return $query->where('user_id', $request->query('user_id'));
+            })
+            ->when($request->query('category_ids'), function ($query) use ($request) {
+                return $query->where('category_ids', $request->query('category_ids'));
+            })
+            ->get();
 
-        $tasks = Task::query();
-
-        if($request->filled('status')) {
-            $tasks->where('status', $request->status);
-        }
-
-        if($request->filled('user_id')) {
-            $tasks->where('user_id', $request->user_id);
-        }
-
-        $selected_id = [];
-        $selected_id['status'] = $request->status;
-        $selected_id['user_id'] = $request->user_id;
+        $users = User::all();
+        $categories = Category::all();
 
         return view('tasks.index',[
-            'tasks' => $tasks->get(),
-            'statuses' => $statuses,
-            'user_names' => $user_names
-        ], compact('selected_id'));
+            'tasks' => $tasks,
+            'users' => $users,
+            'categories' => $categories,
+        ]);
     }
 
     public function create()
@@ -51,16 +42,21 @@ class TasksController extends Controller
 
     public function store(Request $request)
     {
+
         $input = $request->all();
         $input['user_id'] = Auth::id();
-        Task::create($input);
+        $task = Task::create($input);
+        $task->save();
+        $task->categories()->attach($input["category_ids"]);
         return redirect(route('tasks'));
     }
 
     public function edit(Task $task)
     {
+        $categories = Category::all();
         return view('tasks.edit', [
-            'task' => $task
+            'task' => $task,
+            'categories' => $categories,
         ]);
     }
 
@@ -68,6 +64,7 @@ class TasksController extends Controller
     {
         $task->task_name = $request->get('task_name');
         $task->status = $request->get('status');
+        $task->categories()->sync($request->category_ids);
         $task->save();
         return redirect(route('tasks'));
     }

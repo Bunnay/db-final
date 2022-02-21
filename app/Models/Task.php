@@ -11,9 +11,14 @@ class Task extends Model
     use HasFactory;
     protected $fillable = ['task_name','status','user_id'];
 
+
     public function user()
     {
-        return $this->belongsTo(User::class, 'user_id', 'id','name');
+        return $this->belongsTo(User::class, 'user_id');
+    }
+    public function categories()
+    {
+        return $this->belongsToMany(Category::class, 'category_task', 'task_id', 'category_id');
     }
 
 }
